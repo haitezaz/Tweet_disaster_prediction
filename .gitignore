@@ -1,0 +1,10 @@
+# Virtual environment
+proj/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Artifacts
+artifacts/
