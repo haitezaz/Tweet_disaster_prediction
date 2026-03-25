@@ -14,6 +14,9 @@ Responsibilities:
 import joblib
 from pathlib import Path
 
+from src.config import HIGH_CONF_THRESHOLD, LOW_CONF_THRESHOLD
+from src.data_work.preprocess import clean_text
+
 
 class DecisionEngine:
     def __init__(self, artifacts_path="artifacts"):
@@ -24,16 +27,20 @@ class DecisionEngine:
         self.vectorizer = joblib.load(artifacts_dir / "tfidf_vectorizer.pkl")
 
         # Confidence thresholds
-        self.high_conf_threshold = 0.75
-        self.low_conf_threshold = 0.25
+        self.high_conf_threshold = HIGH_CONF_THRESHOLD
+        self.low_conf_threshold = LOW_CONF_THRESHOLD
 
     def predict(self, text: str):
         """
         Returns structured prediction using confidence-aware fallback logic.
         """
 
+        cleaned_text = clean_text(text)
+        if cleaned_text == "":
+            raise ValueError("Input text is empty after preprocessing")
+
         # Vectorize input
-        X = self.vectorizer.transform([text])
+        X = self.vectorizer.transform([cleaned_text])
 
         # Logistic Regression probability
         lr_prob = self.lr_model.predict_proba(X)[0][1]
