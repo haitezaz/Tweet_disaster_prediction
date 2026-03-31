@@ -1,0 +1,19 @@
+# VCS and editor
+.git
+.gitignore
+.vscode
+
+# Python cache and virtualenvs
+__pycache__/
+*.py[cod]
+.pytest_cache/
+proj/
+.venv/
+venv/
+
+# Local data and notebooks
+data/raw/
+*.ipynb
+
+# Misc
+*.log
