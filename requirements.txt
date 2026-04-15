@@ -58,3 +58,5 @@ typing-extensions==4.15.0
 typing-inspection==0.4.2
 uvicorn==0.40.0
 wcwidth==0.6.0
+SQLAlchemy==2.0.43
+python-dotenv==1.1.1

@@ -1,60 +1,121 @@
 from datetime import datetime
 from functools import lru_cache
-import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
+from api import crud
+from api.database import get_db
 from api.schemas import HealthResponse, PredictionResponse, TweetRequest
 from src.models.decision_engine import DecisionEngine
+from src.utils.logger import get_logger
 
-# Configure basic logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 router = APIRouter()
 
 
 @lru_cache(maxsize=1)
 def get_engine() -> DecisionEngine:
-    logger.info("Loading Decision Engine...")
+    logger.info(
+        "model.engine_loading",
+        extra={"extra_data": {"component": "decision_engine"}},
+    )
     return DecisionEngine()
 
 
 @router.get("/health", response_model=HealthResponse)
-def health_check() -> HealthResponse:
+def health_check(session: Session = Depends(get_db)) -> HealthResponse:
+    model_loaded = False
+    db_connected = False
+
     try:
         get_engine()
-        logger.info("Health check passed: model loaded successfully")
-        return HealthResponse(status="ok", model_loaded=True)
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        return HealthResponse(status=f"degraded: {str(e)}", model_loaded=False)
+        model_loaded = True
+    except Exception:
+        logger.error("health.model_unavailable", exc_info=True)
+
+    try:
+        session.execute(text("SELECT 1"))
+        db_connected = True
+    except SQLAlchemyError:
+        logger.error("health.database_unavailable", exc_info=True)
+
+    status = "ok" if model_loaded and db_connected else "degraded"
+    return HealthResponse(status=status, model_loaded=model_loaded, db_connected=db_connected)
 
 
 @router.post("/predict", response_model=PredictionResponse)
-def predict_tweet(payload: TweetRequest) -> PredictionResponse:
-    logger.info(f"Received prediction request | text={payload.text[:50]}...")
+def predict_tweet(
+    payload: TweetRequest,
+    session: Session = Depends(get_db),
+) -> PredictionResponse:
+    logger.info(
+        "prediction.request_received",
+        extra={
+            "extra_data": {
+                "input_text": payload.text,
+                "location": payload.location,
+                "timestamp": payload.event_timestamp.isoformat() if payload.event_timestamp else None,
+            }
+        },
+    )
 
     try:
         engine = get_engine()
     except Exception as exc:
-        logger.error(f"Model loading failed: {exc}")
+        logger.error("prediction.model_loading_failed", exc_info=True)
         raise HTTPException(status_code=503, detail=f"Model artifacts are unavailable: {exc}") from exc
 
     try:
         prediction = engine.predict(payload.text)
-        logger.info(f"Model prediction: {prediction}")
     except ValueError as exc:
-        logger.warning(f"Invalid input: {exc}")
+        logger.warning(
+            "prediction.invalid_input",
+            extra={"extra_data": {"reason": str(exc), "input_text": payload.text}},
+        )
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
-        logger.error(f"Prediction failed: {exc}")
+        logger.error("prediction.model_failed", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}") from exc
 
+    if not {"prediction", "confidence", "source"}.issubset(prediction):
+        logger.error(
+            "prediction.invalid_output",
+            extra={"extra_data": {"prediction_payload": prediction}},
+        )
+        raise HTTPException(status_code=500, detail="Model returned invalid output format")
+
     event_location = payload.location.strip() if payload.location and payload.location.strip() else "Unknown"
-    event_timestamp = payload.event_timestamp or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    event_timestamp = payload.event_timestamp or datetime.utcnow()
+
+    try:
+        request_row = crud.create_request(session, payload)
+        logger.info(
+            "db.request_created",
+            extra={"extra_data": {"request_id": request_row.id}},
+        )
+
+        prediction_row = crud.create_prediction(
+            session,
+            request_id=request_row.id,
+            disaster=bool(prediction["prediction"]),
+            confidence=float(prediction["confidence"]),
+            source=str(prediction["source"]),
+        )
+        logger.info(
+            "db.prediction_created",
+            extra={"extra_data": {"prediction_id": prediction_row.id, "request_id": request_row.id}},
+        )
+    except SQLAlchemyError as exc:
+        logger.error("prediction.database_write_failed", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to persist prediction in database") from exc
 
     response = PredictionResponse(
+        request_id=request_row.id,
+        prediction_id=prediction_row.id,
         disaster=bool(prediction["prediction"]),
         confidence=round(float(prediction["confidence"]), 4),
         source=prediction["source"],
@@ -64,6 +125,17 @@ def predict_tweet(payload: TweetRequest) -> PredictionResponse:
         },
     )
 
-    logger.info(f"Response sent: {response}")
+    logger.info(
+        "prediction.completed",
+        extra={
+            "extra_data": {
+                "request_id": request_row.id,
+                "prediction_id": prediction_row.id,
+                "disaster": response.disaster,
+                "confidence": response.confidence,
+                "source": response.source,
+            }
+        },
+    )
 
     return response

@@ -8,3 +8,8 @@ __pycache__/
 
 # Artifacts
 artifacts/
+
+# Local env secrets
+.env
+.env.*
+!.env.example
