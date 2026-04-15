@@ -1,50 +1,39 @@
-from __future__ import annotations
+"""
+Firestore Collections Reference
+Document-oriented data models using Firestore.
 
-from datetime import datetime
+Collections:
+  - requests: Tweet input data
+  - predictions: Model predictions with confidence scores
+"""
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+# Collections reference
+REQUESTS_COLLECTION = "requests"
+PREDICTIONS_COLLECTION = "predictions"
 
+# Request document structure
+REQUEST_SCHEMA = {
+	"tweet_id": "int | None",
+	"text": "str",
+	"keyword": "str | None",
+	"location": "str | None",
+	"target": "int | None",
+	"event_timestamp": "datetime",
+	"created_at": "datetime",
+	"metadata": {
+		"model_version": "str",
+		"processing_time_ms": "int",
+	},
+}
 
-class Base(DeclarativeBase):
-	pass
-
-
-class Request(Base):
-	__tablename__ = "requests"
-
-	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	tweet_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-	text: Mapped[str] = mapped_column(Text, nullable=False)
-	keyword: Mapped[str | None] = mapped_column(String(255), nullable=True)
-	location: Mapped[str | None] = mapped_column(String(255), nullable=True)
-	target: Mapped[int | None] = mapped_column(Integer, nullable=True)
-	event_timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
-	created_at: Mapped[datetime] = mapped_column(
-		DateTime(timezone=False),
-		server_default=func.now(),
-		nullable=False,
-	)
-
-	predictions: Mapped[list["Prediction"]] = relationship(
-		"Prediction",
-		back_populates="request",
-		cascade="all, delete-orphan",
-	)
-
-
-class Prediction(Base):
-	__tablename__ = "predictions"
-
-	id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-	request_id: Mapped[int] = mapped_column(ForeignKey("requests.id", ondelete="CASCADE"), nullable=False)
-	disaster: Mapped[bool] = mapped_column(Boolean, nullable=False)
-	confidence: Mapped[float] = mapped_column(Float, nullable=False)
-	source: Mapped[str] = mapped_column(String(255), nullable=False)
-	created_at: Mapped[datetime] = mapped_column(
-		DateTime(timezone=False),
-		server_default=func.now(),
-		nullable=False,
-	)
-
-	request: Mapped[Request] = relationship("Request", back_populates="predictions")
+# Prediction document structure
+PREDICTION_SCHEMA = {
+	"request_id": "str",
+	"disaster": "bool",
+	"confidence": "float",
+	"source": "str",
+	"created_at": "datetime",
+	"model_metadata": {
+		"model_version": "str",
+	},
+}

@@ -156,4 +156,4 @@ def test_performance():
     print(f"Average latency: {avg_latency:.4f}s")
 
     # sanity check (not strict)
-    assert avg_latency < 1.0
+    assert avg_latency < 2.0

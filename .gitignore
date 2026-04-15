@@ -5,11 +5,60 @@ proj/
 __pycache__/
 *.pyc
 *.pyo
+*.py[cod]
+*$py.class
+*.so
+env/
+venv/
+ENV/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Artifacts
 artifacts/
 
+# Firebase credentials (NEVER commit sensitive files!)
+secrets/
+!secrets/.gitkeep
+
 # Local env secrets
 .env
-.env.*
+.env.local
+.env.*.local
 !.env.example
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Old SQLite database
+*.db
+*.db-wal
+*.db-shm
+test.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp

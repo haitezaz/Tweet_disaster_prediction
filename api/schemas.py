@@ -42,8 +42,8 @@ class EventInfo(BaseModel):
 
 
 class PredictionResponse(BaseModel):
-	request_id: int
-	prediction_id: int
+	request_id: str
+	prediction_id: str
 	disaster: bool
 	confidence: float
 	source: str

@@ -11,15 +11,15 @@ logger = get_logger(__name__)
 
 app = FastAPI(
 	title="Disaster Tweet Prediction API",
-	version="1.0.0",
-	description="Confidence-aware disaster tweet classifier with structured event output.",
+	version="2.0.0",
+	description="Confidence-aware disaster tweet classifier with Firestore backend.",
 )
 
 
 @app.on_event("startup")
 def on_startup() -> None:
 	init_db()
-	logger.info("database.initialized")
+	logger.info("firestore.initialized")
 
 
 app.include_router(router)
@@ -28,4 +28,4 @@ app.include_router(router)
 @app.get("/")
 def root() -> dict[str, str]:
 	logger.info("api.root_called")
-	return {"message": "Disaster Tweet Prediction API is running"}
+	return {"message": "Disaster Tweet Prediction API is running with Firestore backend"}
