@@ -23,8 +23,14 @@ def get_engine() -> DecisionEngine:
 	return DecisionEngine()
 
 
+@router.get("/")
+async def root() -> dict:
+	"""Root endpoint"""
+	return {"message": "API running"}
+
+
 @router.get("/health", response_model=HealthResponse)
-def health_check() -> HealthResponse:
+async def health_check() -> HealthResponse:
 	"""Health check endpoint"""
 	model_loaded = False
 	db_connected = False
@@ -37,7 +43,7 @@ def health_check() -> HealthResponse:
 
 	try:
 		db = get_firebase_db()
-		db_connected = db.health_check()
+		db_connected = await db.async_health_check()
 	except Exception:
 		logger.error("health.database_unavailable", exc_info=True)
 
@@ -46,7 +52,7 @@ def health_check() -> HealthResponse:
 
 
 @router.post("/predict", response_model=PredictionResponse)
-def predict_tweet(payload: TweetRequest) -> PredictionResponse:
+async def predict_tweet(payload: TweetRequest) -> PredictionResponse:
 	"""
 	Make disaster prediction on tweet.
 	
@@ -97,14 +103,14 @@ def predict_tweet(payload: TweetRequest) -> PredictionResponse:
 
 	try:
 		# Create request document in Firestore
-		request_doc = crud.create_request(payload)
+		request_doc = await crud.async_create_request(payload)
 		logger.info(
 			"firestore.request_created",
 			extra={"extra_data": {"request_id": request_doc.id}},
 		)
 
 		# Create prediction document in Firestore
-		prediction_doc = crud.create_prediction(
+		prediction_doc = await crud.async_create_prediction(
 			request_id=request_doc.id,
 			disaster=bool(prediction["prediction"]),
 			confidence=float(prediction["confidence"]),
@@ -152,14 +158,14 @@ def predict_tweet(payload: TweetRequest) -> PredictionResponse:
 
 
 @router.get("/history")
-def get_history(limit: int = 10) -> list[dict]:
+async def get_history(limit: int = 10) -> list[dict]:
 	"""Get recent prediction history"""
 	try:
-		requests = crud.get_recent_requests(limit=limit)
+		requests = await crud.async_get_recent_requests(limit=limit)
 		
 		result = []
 		for req in requests:
-			predictions = crud.get_predictions_for_request(req.id)
+			predictions = await crud.async_get_predictions_for_request(req.id)
 			result.append({
 				"request_id": req.id,
 				"text": req.text,

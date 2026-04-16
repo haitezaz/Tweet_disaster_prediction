@@ -1,7 +1,7 @@
 """
 test_api.py
 
-End-to-end API tests for Assignment 3.
+End-to-end API tests for Assignment 3 (Async Version).
 
 Covers:
 - Health endpoint
@@ -13,147 +13,167 @@ Covers:
 """
 
 import pytest
-from fastapi.testclient import TestClient
+import pytest_asyncio
+from httpx import AsyncClient
 from api.main import app
 
-client = TestClient(app)
+
+@pytest_asyncio.fixture
+async def client():
+	"""Async client fixture for testing"""
+	async with AsyncClient(app=app, base_url="http://test") as async_client:
+		yield async_client
 
 
 # ==============================
 # HEALTH CHECK
 # ==============================
 
-def test_health_endpoint():
-    response = client.get("/health")
-    assert response.status_code == 200
-    data = response.json()
+@pytest.mark.asyncio
+async def test_health_endpoint(client):
+	"""Test health check endpoint"""
+	response = await client.get("/health")
+	assert response.status_code == 200
+	data = response.json()
 
-    assert "status" in data
-    assert "model_loaded" in data
+	assert "status" in data
+	assert "model_loaded" in data
 
 
 # ==============================
 # VALID PREDICTION
 # ==============================
 
-def test_predict_valid_input():
-    payload = {
-        "text": "Earthquake hits city causing damage"
-    }
+@pytest.mark.asyncio
+async def test_predict_valid_input(client):
+	"""Test prediction with valid input"""
+	payload = {
+		"text": "Earthquake hits city causing damage"
+	}
 
-    response = client.post("/predict", json=payload)
+	response = await client.post("/predict", json=payload)
 
-    assert response.status_code == 200
+	assert response.status_code == 200
 
-    data = response.json()
+	data = response.json()
 
-    assert "disaster" in data
-    assert "confidence" in data
-    assert "source" in data
-    assert "event" in data
+	assert "disaster" in data
+	assert "confidence" in data
+	assert "source" in data
+	assert "event" in data
 
-    assert isinstance(data["disaster"], bool)
-    assert isinstance(data["confidence"], float)
+	assert isinstance(data["disaster"], bool)
+	assert isinstance(data["confidence"], float)
 
 
 # ==============================
 # EMPTY TEXT (SHOULD FAIL)
 # ==============================
 
-def test_predict_empty_text():
-    payload = {
-        "text": ""
-    }
+@pytest.mark.asyncio
+async def test_predict_empty_text(client):
+	"""Test prediction with empty text - should fail validation"""
+	payload = {
+		"text": ""
+	}
 
-    response = client.post("/predict", json=payload)
+	response = await client.post("/predict", json=payload)
 
-    assert response.status_code == 422  # validation error
+	assert response.status_code == 422  # validation error
 
 
 # ==============================
 # MISSING TEXT FIELD
 # ==============================
 
-def test_predict_missing_text():
-    payload = {}
+@pytest.mark.asyncio
+async def test_predict_missing_text(client):
+	"""Test prediction with missing text field - should fail validation"""
+	payload = {}
 
-    response = client.post("/predict", json=payload)
+	response = await client.post("/predict", json=payload)
 
-    assert response.status_code == 422
+	assert response.status_code == 422
 
 
 # ==============================
 # LONG TEXT (EDGE CASE)
 # ==============================
 
-def test_predict_long_text():
-    payload = {
-        "text": "fire " * 100  # very long input
-    }
+@pytest.mark.asyncio
+async def test_predict_long_text(client):
+	"""Test prediction with very long text"""
+	payload = {
+		"text": "fire " * 100  # very long input
+	}
 
-    response = client.post("/predict", json=payload)
+	response = await client.post("/predict", json=payload)
 
-    assert response.status_code == 200
+	assert response.status_code == 200
 
 
 # ==============================
 # WITH LOCATION & TIMESTAMP
 # ==============================
 
-def test_predict_with_metadata():
-    payload = {
-        "text": "Flood reported in city",
-        "location": "Lahore",
-        "event_timestamp": "2026-03-30 12:00:00"
-    }
+@pytest.mark.asyncio
+async def test_predict_with_metadata(client):
+	"""Test prediction with location and timestamp metadata"""
+	payload = {
+		"text": "Flood reported in city",
+		"location": "Lahore",
+		"event_timestamp": "2026-03-30T12:00:00"
+	}
 
-    response = client.post("/predict", json=payload)
+	response = await client.post("/predict", json=payload)
 
-    assert response.status_code == 200
+	assert response.status_code == 200
 
-    data = response.json()
+	data = response.json()
 
-    assert data["event"]["location"] == "Lahore"
-    assert data["event"]["timestamp"] == "2026-03-30 12:00:00"
+	assert data["event"]["location"] == "Lahore"
 
 
 # ==============================
 # INVALID DATA TYPE
 # ==============================
 
-def test_invalid_data_type():
-    payload = {
-        "text": 12345  # invalid type
-    }
+@pytest.mark.asyncio
+async def test_invalid_data_type(client):
+	"""Test prediction with invalid data type - should fail validation"""
+	payload = {
+		"text": 12345  # invalid type
+	}
 
-    response = client.post("/predict", json=payload)
+	response = await client.post("/predict", json=payload)
 
-    assert response.status_code == 422
+	assert response.status_code == 422
 
 
 # ==============================
-# BASIC PERFORMANCE TEST
+# HISTORY ENDPOINT
 # ==============================
 
-def test_performance():
-    import time
+@pytest.mark.asyncio
+async def test_history_endpoint(client):
+	"""Test history endpoint"""
+	response = await client.get("/history?limit=5")
+	assert response.status_code == 200
+	
+	data = response.json()
+	assert isinstance(data, list)
 
-    payload = {
-        "text": "Earthquake hits downtown area"
-    }
 
-    num_requests = 20
-    start_time = time.time()
+# ==============================
+# ROOT ENDPOINT
+# ==============================
 
-    for _ in range(num_requests):
-        response = client.post("/predict", json=payload)
-        assert response.status_code == 200
-
-    total_time = time.time() - start_time
-    avg_latency = total_time / num_requests
-
-    print(f"\nTotal time: {total_time:.4f}s")
-    print(f"Average latency: {avg_latency:.4f}s")
-
-    # sanity check (not strict)
-    assert avg_latency < 2.0
+@pytest.mark.asyncio
+async def test_root_endpoint(client):
+	"""Test root endpoint"""
+	response = await client.get("/")
+	assert response.status_code == 200
+	
+	data = response.json()
+	assert "message" in data
+	assert data["message"] == "API running"

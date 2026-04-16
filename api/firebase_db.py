@@ -5,6 +5,7 @@ Production-grade implementation with error handling, retry logic, and type safet
 
 from __future__ import annotations
 
+import asyncio
 import os
 from datetime import datetime, timezone
 from typing import Any, TypeVar
@@ -394,6 +395,60 @@ class FirebaseDB:
         except Exception as exc:
             logger.error("firestore.health_check_failed", exc_info=True)
             return False
+
+    # ==================== ASYNC METHODS ====================
+
+    async def async_create_document(
+        self,
+        collection: str,
+        data: dict[str, Any],
+        document_id: str | None = None,
+    ) -> str:
+        """Async version of create_document"""
+        return await asyncio.to_thread(self.create_document, collection, data, document_id)
+
+    async def async_get_document(
+        self,
+        collection: str,
+        document_id: str,
+    ) -> dict[str, Any] | None:
+        """Async version of get_document"""
+        return await asyncio.to_thread(self.get_document, collection, document_id)
+
+    async def async_update_document(
+        self,
+        collection: str,
+        document_id: str,
+        data: dict[str, Any],
+    ) -> None:
+        """Async version of update_document"""
+        return await asyncio.to_thread(self.update_document, collection, document_id, data)
+
+    async def async_delete_document(
+        self,
+        collection: str,
+        document_id: str,
+    ) -> None:
+        """Async version of delete_document"""
+        return await asyncio.to_thread(self.delete_document, collection, document_id)
+
+    async def async_query_collection(
+        self,
+        collection: str,
+        filters: list[tuple[str, str, Any]] | None = None,
+        order_by: tuple[str, str] | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """Async version of query_collection"""
+        return await asyncio.to_thread(self.query_collection, collection, filters, order_by, limit)
+
+    async def async_batch_write(self, operations: list[tuple[str, str, str, dict]]) -> None:
+        """Async version of batch_write"""
+        return await asyncio.to_thread(self.batch_write, operations)
+
+    async def async_health_check(self) -> bool:
+        """Async version of health_check"""
+        return await asyncio.to_thread(self.health_check)
 
 
 def get_firebase_db() -> FirebaseDB:

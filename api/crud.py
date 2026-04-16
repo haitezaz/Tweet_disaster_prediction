@@ -5,6 +5,7 @@ Production-grade CRUD layer for Disaster Tweet Prediction system.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 
 from api.firebase_db import get_firebase_db
@@ -244,3 +245,41 @@ def get_prediction(prediction_id: str) -> PredictionDocument | None:
 			exc_info=True,
 		)
 		raise
+
+
+# ==================== ASYNC CRUD OPERATIONS ====================
+
+async def async_create_request(payload: TweetRequest) -> RequestDocument:
+	"""Async version of create_request"""
+	return await asyncio.to_thread(create_request, payload)
+
+
+async def async_get_request(request_id: str) -> RequestDocument | None:
+	"""Async version of get_request"""
+	return await asyncio.to_thread(get_request, request_id)
+
+
+async def async_get_recent_requests(limit: int = 10) -> list[RequestDocument]:
+	"""Async version of get_recent_requests"""
+	return await asyncio.to_thread(get_recent_requests, limit)
+
+
+async def async_create_prediction(
+	request_id: str,
+	disaster: bool,
+	confidence: float,
+	source: str,
+	model_metadata: dict | None = None,
+) -> PredictionDocument:
+	"""Async version of create_prediction"""
+	return await asyncio.to_thread(create_prediction, request_id, disaster, confidence, source, model_metadata)
+
+
+async def async_get_predictions_for_request(request_id: str) -> list[PredictionDocument]:
+	"""Async version of get_predictions_for_request"""
+	return await asyncio.to_thread(get_predictions_for_request, request_id)
+
+
+async def async_get_prediction(prediction_id: str) -> PredictionDocument | None:
+	"""Async version of get_prediction"""
+	return await asyncio.to_thread(get_prediction, prediction_id)
