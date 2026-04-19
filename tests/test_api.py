@@ -207,3 +207,43 @@ def test_performance(mock_get_engine):
     print(f"Average latency: {avg_latency:.4f}s")
 
     assert avg_latency < 1.0
+
+
+# ==============================
+# ASYNC CONCURRENCY TEST
+# ==============================
+
+@pytest.mark.asyncio
+@patch("api.routes.get_engine")
+async def test_async_concurrent_predictions(mock_get_engine):
+    import asyncio
+    import httpx
+    
+    mock_engine = MagicMock()
+    mock_engine.predict.return_value = {
+        "prediction": True,
+        "confidence": 0.85,
+        "source": "mock_source"
+    }
+    mock_get_engine.return_value = mock_engine
+
+    payload = {
+        "text": "Async test for earthquake detection"
+    }
+
+    num_requests = 10
+    
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as async_client:
+        # Create multiple concurrent tasks
+        tasks = [async_client.post("/predict", json=payload) for _ in range(num_requests)]
+        
+        start_time = asyncio.get_event_loop().time()
+        responses = await asyncio.gather(*tasks)
+        total_time = asyncio.get_event_loop().time() - start_time
+        
+    for response in responses:
+        assert response.status_code == 200
+        data = response.json()
+        assert data["disaster"] is True
+        
+    print(f"\nAsync concurrent requests completed in {total_time:.4f}s")
