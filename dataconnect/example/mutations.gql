@@ -1,0 +1,27 @@
+# dataconnect/example/mutations.gql
+mutation CreateTweetRequest($text: String!, $keyword: String, $location: String, $target: Int, $eventTimestamp: Timestamp, $createdAt: Timestamp) @auth(level: PUBLIC) {
+  request_insert(data: {
+    text: $text,
+    keyword: $keyword,
+    location: $location,
+    target: $target,
+    eventTimestamp: $eventTimestamp,
+    createdAt: $createdAt
+  })
+}
+
+mutation CreatePrediction($requestId: UUID!, $disaster: Boolean!, $confidence: Float!, $source: String!, $createdAt: Timestamp) @auth(level: PUBLIC) {
+  prediction_insert(data: {
+    requestId: $requestId,
+    disaster: $disaster,
+    confidence: $confidence,
+    source: $source,
+    createdAt: $createdAt
+  })
+}
+
+
+mutation ClearAllData {
+  prediction_deleteMany(all: true)
+  request_deleteMany(all: true)
+}

@@ -1,0 +1,7 @@
+# dataconnect/example/queries.gql
+query ListRequests @auth(level: PUBLIC) {
+  requests {
+    id
+    text
+  }
+}

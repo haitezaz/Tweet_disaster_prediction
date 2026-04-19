@@ -1,0 +1,19 @@
+# dataconnect/schema/schema.gql
+type Request @table(name: "requests") {
+  id: UUID! @default(expr: "uuidV4()")
+  text: String!
+  keyword: String
+  location: String
+  target: Int
+  eventTimestamp: Timestamp
+  createdAt: Timestamp
+}
+
+type Prediction @table(name: "predictions") {
+  id: UUID! @default(expr: "uuidV4()")
+  requestId: UUID!
+  disaster: Boolean!
+  confidence: Float!
+  source: String!
+  createdAt: Timestamp
+}

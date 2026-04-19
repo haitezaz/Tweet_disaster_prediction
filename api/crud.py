@@ -1,49 +1,68 @@
 from __future__ import annotations
 
-from sqlalchemy.orm import Session
-
-from api.models import Prediction, Request
+import datetime
+from datetime import datetime as dt, timezone
+from dataclasses import dataclass
+from api.database import FirebaseDataConnectClient
 from api.schemas import TweetRequest
 
 
-def create_request(session: Session, payload: TweetRequest) -> Request:
-	request_row = Request(
-		tweet_id=payload.tweet_id,
-		text=payload.text,
-		keyword=payload.keyword,
-		location=payload.location,
-		target=payload.target,
-		event_timestamp=payload.event_timestamp,
-	)
-	try:
-		session.add(request_row)
-		session.commit()
-		session.refresh(request_row)
-	except Exception:
-		session.rollback()
-		raise
-	return request_row
+@dataclass
+class RequestRow:
+    id: str
+
+@dataclass
+class PredictionRow:
+    id: str
 
 
-def create_prediction(
-	session: Session,
-	*,
-	request_id: int,
-	disaster: bool,
-	confidence: float,
-	source: str,
-) -> Prediction:
-	prediction_row = Prediction(
-		request_id=request_id,
-		disaster=disaster,
-		confidence=confidence,
-		source=source,
-	)
-	try:
-		session.add(prediction_row)
-		session.commit()
-		session.refresh(prediction_row)
-	except Exception:
-		session.rollback()
-		raise
-	return prediction_row
+async def create_request(client: FirebaseDataConnectClient, payload: TweetRequest) -> RequestRow:
+    variables = {
+        "text": payload.text,
+        "keyword": payload.keyword,
+        "location": payload.location,
+        "target": payload.target,
+        "eventTimestamp": payload.event_timestamp.isoformat().replace("+00:00", "Z") if payload.event_timestamp else None,
+        "createdAt": dt.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+    }
+    try:
+        response = await client.execute_mutation("CreateTweetRequest", variables)
+        data = response.get("data", {})
+        inserted = data.get("request_insert", 0)
+        if isinstance(inserted, dict):
+            request_id = inserted.get("id", "")
+        else:
+            request_id = inserted
+        return RequestRow(id=str(request_id) if request_id else "")
+    except Exception as exc:
+        print(f"Error creating request: {exc}")
+        raise
+
+
+async def create_prediction(
+    client: FirebaseDataConnectClient,
+    *,
+    request_id: str,
+    disaster: bool,
+    confidence: float,
+    source: str,
+) -> PredictionRow:
+    variables = {
+        "requestId": request_id,
+        "disaster": disaster,
+        "confidence": confidence,
+        "source": source,
+        "createdAt": dt.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+    }
+    try:
+        response = await client.execute_mutation("CreatePrediction", variables)
+        data = response.get("data", {})
+        inserted = data.get("prediction_insert", 0)
+        if isinstance(inserted, dict):
+            prediction_id = inserted.get("id", "")
+        else:
+            prediction_id = inserted
+        return PredictionRow(id=str(prediction_id) if prediction_id else "")
+    except Exception as exc:
+        print(f"Error creating prediction: {exc}")
+        raise

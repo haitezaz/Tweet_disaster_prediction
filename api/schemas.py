@@ -7,8 +7,6 @@ from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_serialize
 
 class TweetRequest(BaseModel):
 	model_config = ConfigDict(populate_by_name=True)
-
-	tweet_id: int | None = Field(default=None, validation_alias=AliasChoices("tweet_id", "id"))
 	keyword: str | None = None
 	location: str | None = None
 	text: str = Field(..., min_length=1, description="Tweet text used for prediction")
@@ -42,8 +40,8 @@ class EventInfo(BaseModel):
 
 
 class PredictionResponse(BaseModel):
-	request_id: int
-	prediction_id: int
+	request_id: str
+	prediction_id: str
 	disaster: bool
 	confidence: float
 	source: str

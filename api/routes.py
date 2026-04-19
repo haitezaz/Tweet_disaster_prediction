@@ -1,13 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import lru_cache
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from fastapi.concurrency import run_in_threadpool
 
 from api import crud
-from api.database import get_db
+from api.database import get_db, FirebaseDataConnectClient
 from api.schemas import HealthResponse, PredictionResponse, TweetRequest
 from src.models.decision_engine import DecisionEngine
 from src.utils.logger import get_logger
@@ -27,7 +25,7 @@ def get_engine() -> DecisionEngine:
 
 
 @router.get("/health", response_model=HealthResponse)
-def health_check(session: Session = Depends(get_db)) -> HealthResponse:
+async def health_check(client: FirebaseDataConnectClient = Depends(get_db)) -> HealthResponse:
     model_loaded = False
     db_connected = False
 
@@ -38,9 +36,11 @@ def health_check(session: Session = Depends(get_db)) -> HealthResponse:
         logger.error("health.model_unavailable", exc_info=True)
 
     try:
-        session.execute(text("SELECT 1"))
+        # Check if auth token generation succeeds as a proxy for client health
+        # We don't have a simple SELECT 1 in Data Connect REST API
+        await client.get_auth_token()
         db_connected = True
-    except SQLAlchemyError:
+    except Exception:
         logger.error("health.database_unavailable", exc_info=True)
 
     status = "ok" if model_loaded and db_connected else "degraded"
@@ -48,9 +48,9 @@ def health_check(session: Session = Depends(get_db)) -> HealthResponse:
 
 
 @router.post("/predict", response_model=PredictionResponse)
-def predict_tweet(
+async def predict_tweet(
     payload: TweetRequest,
-    session: Session = Depends(get_db),
+    client: FirebaseDataConnectClient = Depends(get_db),
 ) -> PredictionResponse:
     logger.info(
         "prediction.request_received",
@@ -70,7 +70,8 @@ def predict_tweet(
         raise HTTPException(status_code=503, detail=f"Model artifacts are unavailable: {exc}") from exc
 
     try:
-        prediction = engine.predict(payload.text)
+        # Run prediction in threadpool to prevent blocking the async event loop
+        prediction = await run_in_threadpool(engine.predict, payload.text)
     except ValueError as exc:
         logger.warning(
             "prediction.invalid_input",
@@ -89,17 +90,17 @@ def predict_tweet(
         raise HTTPException(status_code=500, detail="Model returned invalid output format")
 
     event_location = payload.location.strip() if payload.location and payload.location.strip() else "Unknown"
-    event_timestamp = payload.event_timestamp or datetime.utcnow()
+    event_timestamp = payload.event_timestamp or datetime.now(timezone.utc)
 
     try:
-        request_row = crud.create_request(session, payload)
+        request_row = await crud.create_request(client, payload)
         logger.info(
             "db.request_created",
             extra={"extra_data": {"request_id": request_row.id}},
         )
 
-        prediction_row = crud.create_prediction(
-            session,
+        prediction_row = await crud.create_prediction(
+            client,
             request_id=request_row.id,
             disaster=bool(prediction["prediction"]),
             confidence=float(prediction["confidence"]),
@@ -109,7 +110,7 @@ def predict_tweet(
             "db.prediction_created",
             extra={"extra_data": {"prediction_id": prediction_row.id, "request_id": request_row.id}},
         )
-    except SQLAlchemyError as exc:
+    except Exception as exc:
         logger.error("prediction.database_write_failed", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to persist prediction in database") from exc
 

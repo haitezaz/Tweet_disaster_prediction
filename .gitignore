@@ -13,3 +13,16 @@ artifacts/
 .env
 .env.*
 !.env.example
+
+
+.agents/
+
+.kiro/
+.claude/
+.venv/
+
+
+serviceAccountKey.json
+
+
+*.log

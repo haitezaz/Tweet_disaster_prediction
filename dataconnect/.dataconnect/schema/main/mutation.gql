@@ -1,0 +1,226 @@
+extend type Mutation {
+  """
+  ✨ Insert a single `Prediction` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  prediction_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Prediction_Data!
+  ): Prediction_KeyOutput! @fdc_generated(from: "Prediction", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Request` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  request_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Request_Data!
+  ): Request_KeyOutput! @fdc_generated(from: "Request", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert `Prediction` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  prediction_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Prediction_Data!]!
+  ): [Prediction_KeyOutput!]! @fdc_generated(from: "Prediction", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Request` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  request_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Request_Data!]!
+  ): [Request_KeyOutput!]! @fdc_generated(from: "Request", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert or update a single `Prediction` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Prediction`.
+  """
+  prediction_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Prediction_Data!
+  ): Prediction_KeyOutput! @fdc_generated(from: "Prediction", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Request` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Request`.
+  """
+  request_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Request_Data!
+  ): Request_KeyOutput! @fdc_generated(from: "Request", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update `Prediction` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Prediction`.
+  """
+  prediction_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Prediction_Data!]!
+  ): [Prediction_KeyOutput!]! @fdc_generated(from: "Prediction", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Request` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Request`.
+  """
+  request_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Request_Data!]!
+  ): [Request_KeyOutput!]! @fdc_generated(from: "Request", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Update a single `Prediction` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Prediction` or `null` if not found.
+  """
+  prediction_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Prediction_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Prediction_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Prediction_Data!
+  ): Prediction_KeyOutput @fdc_generated(from: "Prediction", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Request` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Request` or `null` if not found.
+  """
+  request_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Request_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Request_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Request_Data!
+  ): Request_KeyOutput @fdc_generated(from: "Request", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update `Prediction` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  prediction_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Prediction_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Prediction_Data!
+  ): Int! @fdc_generated(from: "Prediction", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Request` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  request_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Request_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Request_Data!
+  ): Int! @fdc_generated(from: "Request", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Delete a single `Prediction` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  prediction_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Prediction_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Prediction_FirstRow
+  ): Prediction_KeyOutput @fdc_generated(from: "Prediction", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Request` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  request_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Request_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Request_FirstRow
+  ): Request_KeyOutput @fdc_generated(from: "Request", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete `Prediction` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  prediction_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Prediction_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Prediction", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Request` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  request_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Request_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Request", purpose: DELETE_MULTIPLE)
+}

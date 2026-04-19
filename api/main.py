@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from api.database import init_db
@@ -9,17 +10,19 @@ configure_logging()
 logger = get_logger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+	init_db()
+	logger.info("database.initialized")
+	yield
+
+
 app = FastAPI(
 	title="Disaster Tweet Prediction API",
 	version="1.0.0",
 	description="Confidence-aware disaster tweet classifier with structured event output.",
+	lifespan=lifespan,
 )
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-	init_db()
-	logger.info("database.initialized")
 
 
 app.include_router(router)

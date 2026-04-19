@@ -1,0 +1,221 @@
+extend type Prediction {
+  """
+  Implicit metadata field that cannot be written. It provides extra information about query results.
+  """
+  _metadata: _Metadata @fdc_generated(from: "Prediction", purpose: METADATA_FIELD)
+  """
+  ✨ Count the number of rows in the `Prediction` table.
+  """
+  _count: Int! @fdc_generated(from: "Prediction.", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Prediction` table where the `confidence` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  confidence_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Prediction.confidence", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Prediction` table where the `createdAt` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  createdAt_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Prediction.createdAt", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Prediction` table where the `disaster` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  disaster_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Prediction.disaster", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Prediction` table where the `id` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  id_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Prediction.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Prediction` table where the `requestId` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  requestId_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Prediction.requestId", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Prediction` table where the `source` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  source_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Prediction.source", purpose: QUERY_COUNT)
+  """
+  ✨ Sum the `confidence` field in the `Prediction` table.
+  """
+  confidence_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Prediction.confidence", purpose: QUERY_SUM)
+  """
+  ✨ Average the `confidence` field in the `Prediction` table.
+  """
+  confidence_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Prediction.confidence", purpose: QUERY_AVG)
+  """
+  ✨ Minimum of the `confidence` field in the `Prediction` table.
+  """
+  confidence_min: Float @fdc_generated(from: "Prediction.confidence", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `createdAt` field in the `Prediction` table.
+  """
+  createdAt_min: Timestamp @fdc_generated(from: "Prediction.createdAt", purpose: QUERY_MIN)
+  """
+  ✨ Maximum of the `confidence` field in the `Prediction` table.
+  """
+  confidence_max: Float @fdc_generated(from: "Prediction.confidence", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `createdAt` field in the `Prediction` table.
+  """
+  createdAt_max: Timestamp @fdc_generated(from: "Prediction.createdAt", purpose: QUERY_MAX)
+  """
+  A generated field that is used for caching results in SDKs.
+  """
+  _id: ID! @fdc_generated(from: "Prediction.id", purpose: ENTITY_ID)
+}
+extend type Request {
+  """
+  Implicit metadata field that cannot be written. It provides extra information about query results.
+  """
+  _metadata: _Metadata @fdc_generated(from: "Request", purpose: METADATA_FIELD)
+  """
+  ✨ Count the number of rows in the `Request` table.
+  """
+  _count: Int! @fdc_generated(from: "Request.", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Request` table where the `createdAt` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  createdAt_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Request.createdAt", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Request` table where the `eventTimestamp` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  eventTimestamp_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Request.eventTimestamp", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Request` table where the `id` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  id_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Request.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Request` table where the `keyword` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  keyword_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Request.keyword", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Request` table where the `location` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  location_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Request.location", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Request` table where the `target` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  target_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Request.target", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Request` table where the `text` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  text_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Request.text", purpose: QUERY_COUNT)
+  """
+  ✨ Sum the `target` field in the `Request` table.
+  """
+  target_sum(
+    """
+    Set to true to sum the distinct values.
+    """
+    distinct: Boolean = false
+  ): Int @fdc_generated(from: "Request.target", purpose: QUERY_SUM)
+  """
+  ✨ Average the `target` field in the `Request` table.
+  """
+  target_avg(
+    """
+    Set to true to average the distinct values.
+    """
+    distinct: Boolean = false
+  ): Float @fdc_generated(from: "Request.target", purpose: QUERY_AVG)
+  """
+  ✨ Minimum of the `createdAt` field in the `Request` table.
+  """
+  createdAt_min: Timestamp @fdc_generated(from: "Request.createdAt", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `eventTimestamp` field in the `Request` table.
+  """
+  eventTimestamp_min: Timestamp @fdc_generated(from: "Request.eventTimestamp", purpose: QUERY_MIN)
+  """
+  ✨ Minimum of the `target` field in the `Request` table.
+  """
+  target_min: Int @fdc_generated(from: "Request.target", purpose: QUERY_MIN)
+  """
+  ✨ Maximum of the `createdAt` field in the `Request` table.
+  """
+  createdAt_max: Timestamp @fdc_generated(from: "Request.createdAt", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `eventTimestamp` field in the `Request` table.
+  """
+  eventTimestamp_max: Timestamp @fdc_generated(from: "Request.eventTimestamp", purpose: QUERY_MAX)
+  """
+  ✨ Maximum of the `target` field in the `Request` table.
+  """
+  target_max: Int @fdc_generated(from: "Request.target", purpose: QUERY_MAX)
+  """
+  A generated field that is used for caching results in SDKs.
+  """
+  _id: ID! @fdc_generated(from: "Request.id", purpose: ENTITY_ID)
+}
