@@ -6,8 +6,6 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Artifacts
-artifacts/
 
 # Local env secrets
 .env
