@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Disaster Prediction Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/dashboard/assets/dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
+  <script src="/dashboard/assets/dashboard.js" defer></script>
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <div class="bg-grid"></div>
+
+  <main class="dashboard-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Realtime Monitoring</p>
+        <h1>Disaster Tweet Prediction Dashboard</h1>
+        <p class="subtitle">Live view of true/false classifications, confidence trends, and model source usage for the most recent window.</p>
+      </div>
+
+      <div class="controls">
+        <label class="control-group" for="windowSelect">
+          Window
+          <select id="windowSelect" aria-label="Select window size">
+            <option value="60" selected>Last 60 minutes</option>
+            <option value="120">Last 2 hours</option>
+            <option value="360">Last 6 hours</option>
+            <option value="1440">Last 24 hours</option>
+          </select>
+        </label>
+
+        <button id="refreshButton" type="button">Refresh</button>
+
+        <div class="status">
+          <span id="statusDot" class="dot"></span>
+          <span id="statusText">Initializing</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="metrics" aria-label="Summary metrics">
+      <article class="metric-card reveal" style="--delay: 0.04s">
+        <p class="metric-label">Total Predictions</p>
+        <p id="metricTotal" class="metric-value">0</p>
+      </article>
+
+      <article class="metric-card reveal" style="--delay: 0.08s">
+        <p class="metric-label">Predicted True</p>
+        <p id="metricTrue" class="metric-value">0</p>
+      </article>
+
+      <article class="metric-card reveal" style="--delay: 0.12s">
+        <p class="metric-label">Predicted False</p>
+        <p id="metricFalse" class="metric-value">0</p>
+      </article>
+
+      <article class="metric-card reveal" style="--delay: 0.16s">
+        <p class="metric-label">True Rate</p>
+        <p id="metricTrueRate" class="metric-value">0%</p>
+      </article>
+
+      <article class="metric-card reveal" style="--delay: 0.2s">
+        <p class="metric-label">Avg Confidence</p>
+        <p id="metricConfidence" class="metric-value">0%</p>
+      </article>
+    </section>
+
+    <section class="charts-grid">
+      <article class="panel chart-panel reveal" style="--delay: 0.25s">
+        <div class="panel-head">
+          <h2>Classification Timeline</h2>
+          <p>Bucketed counts for true vs false predictions</p>
+        </div>
+        <canvas id="timelineChart" aria-label="Timeline chart" role="img"></canvas>
+      </article>
+
+      <article class="panel donut-panel reveal" style="--delay: 0.32s">
+        <div class="panel-head">
+          <h2>Model Source Split</h2>
+          <p>How often each model path produced predictions</p>
+        </div>
+        <canvas id="sourceChart" aria-label="Source split chart" role="img"></canvas>
+      </article>
+    </section>
+
+    <section class="panel table-panel reveal" style="--delay: 0.38s">
+      <div class="panel-head">
+        <h2>Recent Predictions</h2>
+        <p id="updatedAt">Updated: -</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Time (UTC)</th>
+              <th>Prediction</th>
+              <th>Confidence</th>
+              <th>Source</th>
+              <th>Location</th>
+              <th>Tweet Preview</th>
+            </tr>
+          </thead>
+          <tbody id="recentTableBody">
+            <tr>
+              <td colspan="6" class="empty-row">Waiting for data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
