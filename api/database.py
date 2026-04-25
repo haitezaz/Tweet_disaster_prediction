@@ -17,8 +17,15 @@ class FirebaseDataConnectClient:
         self.base_url = f"https://firebasedataconnect.googleapis.com/v1beta/projects/{self.project_id}/locations/{self.location}/services/{self.service_id}/connectors/{self.connector_id}"
         
         # Configure a larger connection pool and longer timeout for concurrency
-        limits = httpx.Limits(max_keepalive_connections=50, max_connections=100)
-        self.client = httpx.AsyncClient(limits=limits, timeout=30.0)
+        limits = httpx.Limits(max_keepalive_connections=500, max_connections=1000)
+        timeout = httpx.Timeout(
+            timeout=30.0,  # default timeout for all operations
+            connect=10.0,  # connection establishment timeout
+            read=20.0,     # reading response timeout
+            write=10.0,    # writing request timeout
+            pool=5.0       # acquiring connection from pool timeout
+        )
+        self.client = httpx.AsyncClient(limits=limits, timeout=timeout)
         
         self._credentials = None
         self._token = None
@@ -65,7 +72,12 @@ class FirebaseDataConnectClient:
 
         response = await self.client.post(url, headers=headers, json=payload)
         response.raise_for_status()
-        return response.json()
+        
+        response_json = response.json()
+        if "errors" in response_json:
+            print(f"GraphQL Errors in {mutation_name}:", json.dumps(response_json["errors"], indent=2))
+            
+        return response_json
 
     async def execute_query(self, query_name: str, variables: dict) -> dict:
         url = f"{self.base_url}:executeQuery"
@@ -83,7 +95,12 @@ class FirebaseDataConnectClient:
 
         response = await self.client.post(url, headers=headers, json=payload)
         response.raise_for_status()
-        return response.json()
+        
+        response_json = response.json()
+        if "errors" in response_json:
+            print(f"GraphQL Errors in {query_name}:", json.dumps(response_json["errors"], indent=2))
+            
+        return response_json
 
     async def close(self):
         await self.client.aclose()

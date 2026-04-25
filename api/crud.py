@@ -28,12 +28,12 @@ async def create_request(client: FirebaseDataConnectClient, payload: TweetReques
     try:
         response = await client.execute_mutation("CreateTweetRequest", variables)
         data = response.get("data", {})
-        inserted = data.get("request_insert", 0)
+        inserted = data.get("request_insert", {})
         if isinstance(inserted, dict):
             request_id = inserted.get("id", "")
         else:
-            request_id = inserted
-        return RequestRow(id=str(request_id) if request_id else "")
+            request_id = str(inserted) if inserted else ""
+        return RequestRow(id=request_id)
     except Exception as exc:
         print(f"Error creating request: {exc}")
         raise
@@ -57,12 +57,20 @@ async def create_prediction(
     try:
         response = await client.execute_mutation("CreatePrediction", variables)
         data = response.get("data", {})
-        inserted = data.get("prediction_insert", 0)
+        inserted = data.get("prediction_insert", {})
         if isinstance(inserted, dict):
             prediction_id = inserted.get("id", "")
         else:
-            prediction_id = inserted
-        return PredictionRow(id=str(prediction_id) if prediction_id else "")
+            prediction_id = str(inserted) if inserted else ""
+        return PredictionRow(id=prediction_id)
     except Exception as exc:
         print(f"Error creating prediction: {exc}")
+        raise
+
+async def list_all_data(client: FirebaseDataConnectClient) -> dict:
+    try:
+        response = await client.execute_query("ListAllData", {})
+        return response.get("data", {})
+    except Exception as exc:
+        print(f"Error fetching data: {exc}")
         raise

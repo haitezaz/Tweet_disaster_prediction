@@ -5,3 +5,23 @@ query ListRequests @auth(level: PUBLIC) {
     text
   }
 }
+
+query ListAllData @auth(level: PUBLIC) {
+  requests(limit: 10000) {
+    id
+    text
+    keyword
+    location
+    target
+    eventTimestamp
+    createdAt
+  }
+  predictions(limit: 10000) {
+    id
+    requestId
+    disaster
+    confidence
+    source
+    createdAt
+  }
+}

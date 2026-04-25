@@ -46,6 +46,14 @@ async def health_check(client: FirebaseDataConnectClient = Depends(get_db)) -> H
     status = "ok" if model_loaded and db_connected else "degraded"
     return HealthResponse(status=status, model_loaded=model_loaded, db_connected=db_connected)
 
+@router.get("/data")
+async def get_all_data(client: FirebaseDataConnectClient = Depends(get_db)):
+    """Retrieve all data capped at 10,000 limit limit."""
+    try:
+        data = await crud.list_all_data(client)
+        return data
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 @router.post("/predict", response_model=PredictionResponse)
 async def predict_tweet(
@@ -110,6 +118,8 @@ async def predict_tweet(
             "db.prediction_created",
             extra={"extra_data": {"prediction_id": prediction_row.id, "request_id": request_row.id}},
         )
+
+    
     except Exception as exc:
         logger.error("prediction.database_write_failed", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to persist prediction in database") from exc
