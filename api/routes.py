@@ -125,6 +125,7 @@ async def dashboard_data(
     window_minutes: int = Query(default=60, ge=5, le=1440),
     bucket_minutes: int = Query(default=5, ge=1, le=60),
     recent_limit: int = Query(default=20, ge=5, le=100),
+    fallback_limit: int = Query(default=100, ge=10, le=500),
     client: FirebaseDataConnectClient = Depends(get_db),
 ) -> dict[str, Any]:
     try:
@@ -207,6 +208,86 @@ async def dashboard_data(
         )
 
     total = true_count + false_count
+    
+    # Fallback mechanism: if no predictions in time window but data exists, use most recent predictions
+    fallback_mode = False
+    actual_window_minutes = window_minutes
+    
+    if total == 0 and len(predictions_raw) > 0:
+        # Sort all predictions by timestamp descending (most recent first)
+        sorted_predictions = sorted(
+            [p for p in predictions_raw if isinstance(p, dict) and _parse_timestamp(p.get("createdAt"))],
+            key=lambda p: _parse_timestamp(p.get("createdAt")),
+            reverse=True
+        )[:fallback_limit]
+        
+        # Reset counters and collections
+        true_count = 0
+        false_count = 0
+        confidence_sum = 0.0
+        source_counts = defaultdict(int)
+        bucket_counts = defaultdict(lambda: {"true": 0, "false": 0, "total": 0})
+        recent_items = []
+        
+        # Process fallback predictions
+        fallback_timestamps = []
+        for pred in sorted_predictions:
+            pred_ts = _parse_timestamp(pred.get("createdAt"))
+            if pred_ts is None:
+                continue
+            
+            fallback_timestamps.append(pred_ts)
+            request_id = pred.get("requestId")
+            request_row = request_map.get(request_id, {})
+            
+            disaster = _to_bool(pred.get("disaster"))
+            confidence = max(0.0, min(1.0, _to_float(pred.get("confidence"), 0.0)))
+            source = str(pred.get("source") or "unknown")
+            
+            if disaster:
+                true_count += 1
+            else:
+                false_count += 1
+            
+            confidence_sum += confidence
+            source_counts[source] += 1
+            
+            bucket_ts = _bucket_floor(pred_ts, bucket_minutes)
+            bucket_counts[bucket_ts]["total"] += 1
+            if disaster:
+                bucket_counts[bucket_ts]["true"] += 1
+            else:
+                bucket_counts[bucket_ts]["false"] += 1
+            
+            text = str(request_row.get("text") or "")
+            recent_items.append(
+                {
+                    "prediction_id": pred.get("id"),
+                    "request_id": request_id,
+                    "timestamp": _to_utc_z(pred_ts),
+                    "disaster": disaster,
+                    "confidence": round(confidence, 4),
+                    "source": source,
+                    "text": text,
+                    "text_preview": (text[:140] + "...") if len(text) > 140 else text,
+                    "location": request_row.get("location") or "Unknown",
+                }
+            )
+        
+        # Calculate actual window from fallback data
+        if fallback_timestamps:
+            newest_ts = max(fallback_timestamps)
+            oldest_ts = min(fallback_timestamps)
+            actual_window_minutes = (newest_ts - oldest_ts).total_seconds() / 60
+        
+        # Update window boundaries for series generation
+        if fallback_timestamps:
+            window_start = min(fallback_timestamps)
+            now_utc = max(fallback_timestamps)
+        
+        fallback_mode = True
+        total = true_count + false_count
+    
     true_rate = (true_count / total * 100.0) if total else 0.0
     avg_confidence = (confidence_sum / total) if total else 0.0
 
@@ -236,7 +317,9 @@ async def dashboard_data(
     return {
         "window_minutes": window_minutes,
         "bucket_minutes": bucket_minutes,
-        "generated_at": _to_utc_z(now_utc),
+        "generated_at": _to_utc_z(datetime.now(timezone.utc)),
+        "fallback_mode": fallback_mode,
+        "actual_window_minutes": round(actual_window_minutes, 2),
         "summary": {
             "total": total,
             "true_count": true_count,
